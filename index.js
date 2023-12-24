@@ -54,6 +54,18 @@ async function run() {
             res.send({ count });
         })
 
+        // search by name 
+        app.get('/search-product', async (req, res) => {
+            const { name } = req.query;
+            const searchedFoods = await productsCollection.find({ strMeal: { $regex: new RegExp(name, 'i') } }).toArray();
+            if (searchedFoods.length === 0) {
+
+                return res.status(404).send({ message: `${name} is not available right now` });
+            }
+            res.send(searchedFoods);
+
+        });
+
         // Send a ping to confirm a successful connection
         await client.db("admin").command({ ping: 1 });
         console.log("Pinged your deployment. You successfully connected to MongoDB!");
