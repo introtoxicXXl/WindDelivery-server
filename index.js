@@ -30,7 +30,16 @@ async function run() {
         await client.connect();
         const productsCollection = client.db('productsDB').collection('products');
 
-      
+        // all product 
+        app.get('/products', async (req, res) => {
+            const page = parseInt(req.query.page);
+            const size = parseInt(req.query.size);
+            const result = await productsCollection.find()
+                .skip(page * size)
+                .limit(size)
+                .toArray();
+            res.send(result);
+        })
 
         // Send a ping to confirm a successful connection
         await client.db("admin").command({ ping: 1 });
