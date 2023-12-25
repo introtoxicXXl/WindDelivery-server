@@ -29,6 +29,7 @@ async function run() {
         // Connect the client to the server	(optional starting in v4.7)
         await client.connect();
         const productsCollection = client.db('productsDB').collection('products');
+        const usersCollection = client.db('usersDB').collection('users');
 
         // all product 
         app.get('/products', async (req, res) => {
@@ -72,6 +73,16 @@ async function run() {
             const query = { _id: new ObjectId(id) };
             const result = await productsCollection.findOne(query);
             res.send(result)
+        })
+
+        // users 
+        app.post('/users', async (req, res) => {
+            const user = req.body;
+            const existingUser = await usersCollection.findOne({ email: user.email });
+            if (!existingUser) {
+                const result = await usersCollection.insertOne(user);
+                res.send(result);
+            }
         })
 
         // Send a ping to confirm a successful connection
