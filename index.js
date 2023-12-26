@@ -17,7 +17,6 @@ app.use(cors({
 
 const verifyToken = async (req, res, next) => {
     const token = req.cookies?.token;
-    console.log(token)
     if (!token) {
         return res.status(401).send({ message: 'Unauthorized Access' })
     }
@@ -54,7 +53,6 @@ async function run() {
         // jwt 
         app.post('/jwt', async (req, res) => {
             const user = req.body;
-            console.log(user)
             const token = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET, { expiresIn: '1h' })
             res
                 .cookie('token', token, {
@@ -222,14 +220,12 @@ async function run() {
 
         app.delete('/orders/:id', async (req, res) => {
             const id = req.params.id;
-            console.log(id)
             const query = { _id: id }
             const result = await cartsCollection.deleteOne(query);
             res.send(result);
         })
         app.delete('/product/:id', async (req, res) => {
             const id = req.params.id;
-            console.log(id)
             const query = { _id: id }
             const result = await productsCollection.deleteOne(query);
             res.send(result);
