@@ -3,12 +3,32 @@ const express = require('express');
 const cors = require('cors');
 const port = process.env.PORT || 5000;
 require('dotenv').config()
+const jwt = require('jsonwebtoken');
+const cookieParser = require('cookie-parser');
 app = express();
 
 // middleware
-
+app.use(cookieParser());
 app.use(express.json())
-app.use(cors())
+app.use(cors({
+    origin: ['http://localhost:5173'],
+    credentials: true
+}));
+
+const verifyToken = async (req, res, next) => {
+    const token = req.cookies?.token;
+    console.log(token)
+    if (!token) {
+        return res.status(401).send({ message: 'Unauthorized Access' })
+    }
+    jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, (err, decoded) => {
+        if (err) {
+            return res.status(401).send('Unamortized Access')
+        }
+        req.user = decoded;
+        next();
+    })
+}
 
 
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASSWORD}@cluster0.dtrhla5.mongodb.net/?retryWrites=true&w=majority`;
@@ -30,6 +50,22 @@ async function run() {
         const cartsCollection = client.db('cartsDB').collection('carts');
         const usersCollection = client.db('usersDB').collection('users');
 
+
+        // jwt 
+        app.post('/jwt', async (req, res) => {
+            const user = req.body;
+            console.log(user)
+            const token = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET, { expiresIn: '1h' })
+            res
+                .cookie('token', token, {
+                    httpOnly: true,
+                    secure: true,
+                    sameSite: 'none'
+                })
+                .send({ success: true })
+        })
+
+
         // all product 
         app.get('/products', async (req, res) => {
             const page = parseInt(req.query.page);
@@ -39,6 +75,18 @@ async function run() {
                 .limit(size)
                 .toArray();
             res.send(result);
+        })
+
+        // add food 
+        app.post('/products', async(req, res) => {
+            const food = req.body;
+            const result = await productsCollection.insertOne(food);
+            res.send(result)
+        })
+        app.post('/products2', async(req, res) => {
+            const food = req.body;
+            const result = await cartsCollection.insertOne(food);
+            res.send(result)
         })
 
         // top 6 items 
@@ -95,19 +143,48 @@ async function run() {
         })
 
         // add product by user email 
-        app.post('/addCart', async(req, res) => {
+        app.post('/addCart', async (req, res) => {
             const products = req.body;
             for (const product of products) {
                 const existingProduct = await cartsCollection.findOne({ _id: product._id });
-    
+
                 if (existingProduct) {
-                   const result =  await cartsCollection.updateOne({ _id: product._id }, { $inc: { quantity: product.quantity } });
-                   res.send(result)
+                    const result = await cartsCollection.updateOne({ _id: product._id }, { $inc: { quantity: product.quantity } });
+                    res.send(result)
                 } else {
-                  const result=  await cartsCollection.insertOne(product);
-                  res.send(result)
+                    const result = await cartsCollection.insertOne(product);
+                    res.send(result)
                 }
             }
+        })
+
+        // orders 
+        app.get('/orders', verifyToken, async (req, res) => {
+            if (req.user.email !== req.query.email) {
+                res.status(403).send({ message: 'Forbidden Access' })
+            }
+            let query = {};
+            if (req.query?.email) {
+                query = { email: req.query.email }
+            }
+            const result = await cartsCollection.find(query).toArray();
+            res.send(result);
+        })
+        // logout 
+        app.post('/logout', async (req, res) => {
+            const user = req.body;
+            res.clearCookie('token', { maxAge: 0 }).send({ success: true })
+
+        })
+
+
+
+        app.delete('/orders/:id', async (req, res) => {
+            const id = req.params.id;
+            console.log(id)
+            const query = { _id: id }
+            const result = await cartsCollection.deleteOne(query);
+            res.send(result);
         })
 
         // Send a ping to confirm a successful connection
