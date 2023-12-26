@@ -11,7 +11,7 @@ app = express();
 app.use(cookieParser());
 app.use(express.json())
 app.use(cors({
-    origin: ['http://localhost:5173'],
+    origin: ["https://winddelivery-bc076.web.app","https://winddelivery-bc076.firebaseapp.com/"],
     credentials: true
 }));
 
@@ -44,7 +44,7 @@ const client = new MongoClient(uri, {
 async function run() {
     try {
         // Connect the client to the server	(optional starting in v4.7)
-        await client.connect();
+        // await client.connect();
         const productsCollection = client.db('productsDB').collection('products');
         const cartsCollection = client.db('cartsDB').collection('carts');
         const usersCollection = client.db('usersDB').collection('users');
