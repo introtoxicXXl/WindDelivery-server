@@ -14,6 +14,12 @@ app.use(cors({
     origin: ['https://winddelivery-bc076.firebaseapp.com','https://winddelivery-bc076.web.app'],
     credentials: true
 }));
+// Enable all CORS requests
+app.use((req, res, next) => {
+    res.header('Access-Control-Allow-Origin', 'https://winddelivery-bc076.firebaseapp.com');
+    res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept');
+    next();
+  });
 
 const verifyToken = async (req, res, next) => {
     const token = req.cookies?.token;
