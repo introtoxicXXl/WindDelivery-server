@@ -11,7 +11,7 @@ app = express();
 app.use(cookieParser());
 app.use(express.json())
 app.use(cors({
-    origin: ["https://winddelivery-bc076.web.app","https://winddelivery-bc076.firebaseapp.com/"],
+    origin: ['https://winddelivery-bc076.firebaseapp.com','https://winddelivery-bc076.web.app'],
     credentials: true
 }));
 
