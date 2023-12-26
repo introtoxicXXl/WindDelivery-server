@@ -113,6 +113,47 @@ async function run() {
             res.send(searchedFoods);
 
         });
+               // update product
+               app.put('/product/:id', async (req, res) => {
+                const id = req.params.id;
+                const product = req.body;
+                const filter = { _id: new ObjectId(id) }
+                const options = { upsert: true }
+                const updateProduct = {
+                    $set: {
+                        strMeal: product.strMeal,
+                        strMealThumb: product.strMealThumb,
+                        strPrice: product.strPrice,
+                        email: product.email,
+                        strCategory: product.strCategory,
+                        strArea: product.strArea,
+                        idMeal: product.idMeal,
+                        strInstructions: product.strInstructions
+                    }
+                }
+                const result = await productsCollection.updateOne(filter, updateProduct, options)
+                res.send(result)
+            })
+               app.put('/product2/:id', async (req, res) => {
+                const id = req.params.id;
+                const product = req.body;
+                const filter = { _id: new ObjectId(id) }
+                const options = { upsert: true }
+                const updateProduct = {
+                    $set: {
+                        strMeal: product.strMeal,
+                        strMealThumb: product.strMealThumb,
+                        strPrice: product.strPrice,
+                        email: product.email,
+                        strCategory: product.strCategory,
+                        strArea: product.strArea,
+                        idMeal: product.idMeal,
+                        strInstructions: product.strInstructions
+                    }
+                }
+                const result = await cartsCollection.updateOne(filter, updateProduct, options)
+                res.send(result)
+            })
 
         // single product 
         app.get('/product/:id', async (req, res) => {
@@ -184,6 +225,13 @@ async function run() {
             console.log(id)
             const query = { _id: id }
             const result = await cartsCollection.deleteOne(query);
+            res.send(result);
+        })
+        app.delete('/product/:id', async (req, res) => {
+            const id = req.params.id;
+            console.log(id)
+            const query = { _id: id }
+            const result = await productsCollection.deleteOne(query);
             res.send(result);
         })
 
