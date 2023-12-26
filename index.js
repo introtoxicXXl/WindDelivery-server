@@ -29,6 +29,7 @@ async function run() {
         // Connect the client to the server	(optional starting in v4.7)
         await client.connect();
         const productsCollection = client.db('productsDB').collection('products');
+        const cartsCollection = client.db('cartsDB').collection('carts');
         const usersCollection = client.db('usersDB').collection('users');
 
         // all product 
@@ -75,6 +76,16 @@ async function run() {
             res.send(result)
         })
 
+        app.get('/products/cart', async (req, res) => {
+            const ids = req.query.ids;
+            const idsArray = ids.split(',');
+            const objectIds = idsArray.map(id => new ObjectId(id));
+            const query = { _id: { $in: objectIds } };
+            const cursor = productsCollection.find(query);
+            const result = await cursor.toArray();
+            res.send(result);
+        });
+
         // users 
         app.post('/users', async (req, res) => {
             const user = req.body;
@@ -82,6 +93,22 @@ async function run() {
             if (!existingUser) {
                 const result = await usersCollection.insertOne(user);
                 res.send(result);
+            }
+        })
+
+        // add product by user email 
+        app.post('/addCart', async(req, res) => {
+            const products = req.body;
+            for (const product of products) {
+                const existingProduct = await cartsCollection.findOne({ _id: product._id });
+    
+                if (existingProduct) {
+                   const result =  await cartsCollection.updateOne({ _id: product._id }, { $inc: { quantity: product.quantity } });
+                   res.send(result)
+                } else {
+                  const result=  await cartsCollection.insertOne(product);
+                  res.send(result)
+                }
             }
         })
 
