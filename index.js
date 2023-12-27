@@ -11,15 +11,33 @@ app = express();
 app.use(cookieParser());
 app.use(express.json())
 app.use(cors({
-    origin: ['https://winddelivery-bc076.firebaseapp.com','https://winddelivery-bc076.web.app'],
+    origin: ['https://winddelivery-bc076.web.app'],
     credentials: true
 }));
-// Enable all CORS requests
-app.use((req, res, next) => {
-    res.header('Access-Control-Allow-Origin', 'https://winddelivery-bc076.firebaseapp.com');
-    res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept');
-    next();
-  });
+
+const allowCors = fn => async (req, res) => {
+    res.setHeader('Access-Control-Allow-Credentials', true)
+    res.setHeader('Access-Control-Allow-Origin', '*')
+    // another common pattern
+    // res.setHeader('Access-Control-Allow-Origin', req.headers.origin);
+    res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS,PATCH,DELETE,POST,PUT')
+    res.setHeader(
+      'Access-Control-Allow-Headers',
+      'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version'
+    )
+    if (req.method === 'OPTIONS') {
+      res.status(200).end()
+      return
+    }
+    return await fn(req, res)
+  }
+  
+  const handler = (req, res) => {
+    const d = new Date()
+    res.end(d.toString())
+  }
+  
+  app.exports = allowCors(handler)
 
 const verifyToken = async (req, res, next) => {
     const token = req.cookies?.token;
@@ -50,7 +68,7 @@ const client = new MongoClient(uri, {
 async function run() {
     try {
         // Connect the client to the server	(optional starting in v4.7)
-        // await client.connect();
+        client.connect();
         const productsCollection = client.db('productsDB').collection('products');
         const cartsCollection = client.db('cartsDB').collection('carts');
         const usersCollection = client.db('usersDB').collection('users');
